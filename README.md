@@ -1,8 +1,8 @@
-# Centinela — api-gateway
+# Centinela — gateway-service
 
 Gateway central (nginx) que enruta `/api`, `/ws` y `/media` a los backends de la plataforma sobre la red Docker `centinela-net`. No tiene código de aplicación propio — es configuración de nginx.
 
-Parte del org multi-repo `PlataformaIntegradaInvestigadores`. Es el punto de entrada único desde `frontend-app` (que proxea `/api/`, `/ws/` y `/media/` hacia acá) hacia todos los backends.
+Parte del org multi-repo `PlataformaIntegradaInvestigadores`. Es el punto de entrada único desde `centinela-front` (que proxea `/api/`, `/ws/` y `/media/` hacia acá) hacia todos los backends.
 
 ## Stack
 
@@ -35,14 +35,14 @@ Esquema `/api/<servicio>/`:
 
 | Ruta | Upstream |
 |---|---|
-| `/api/identity/` | `profile-identity-web:8002` |
-| `/api/social/` | `social-consensus-web:8000` |
-| `/api/search/` | `search-engine-backend:8001` |
-| `/api/search/v2/` | `search-microservice-backend:8002` |
-| `/api/predictive/` | `predictive-backend:8003` |
-| `/api/rag/` | `centinela-rag:8181` |
-| `/ws/` | `social-consensus-web:8000` (WebSocket) |
-| `/media/` | `social-consensus-web:8000` / `profile-identity-web:8002` |
+| `/api/identity/` | `identity-service:8002` |
+| `/api/social/` | `social-service:8000` |
+| `/api/search/` | `search-service:8001` |
+| `/api/search/v2/` | `search-bff-service:8002` |
+| `/api/predictive/` | `predictive-service:8003` |
+| `/api/rag/` | `rag-service:8181` |
+| `/ws/` | `social-service:8000` (WebSocket) |
+| `/media/` | `social-service:8000` / `identity-service:8002` |
 
 ## Variables de entorno
 

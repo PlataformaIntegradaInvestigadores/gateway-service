@@ -1,7 +1,7 @@
 services:
-  api-gateway:
+  gateway-service:
     build: .
-    container_name: api-gateway
+    container_name: gateway-service
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -10,7 +10,7 @@ services:
     networks:
       centinela-net:
         aliases:
-          - api-gateway
+          - gateway-service
 
 networks:
   centinela-net:
