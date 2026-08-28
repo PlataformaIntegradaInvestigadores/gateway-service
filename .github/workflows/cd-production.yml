@@ -25,13 +25,13 @@ jobs:
     steps:
       - name: Actualizar código
         run: |
-          cd /opt/centinela/api-gateway
+          cd /opt/centinela/gateway-service
           git fetch origin main
           git reset --hard origin/main
 
       - name: Reconstruir contenedor
         run: |
-          cd /opt/centinela/api-gateway
+          cd /opt/centinela/gateway-service
           docker compose up -d --build --remove-orphans
 
       - name: Health check con rollback automático
@@ -48,7 +48,7 @@ jobs:
           done
           if [ "$HEALTHY" = "false" ]; then
             echo "Health check fallido — rollback al commit anterior"
-            cd /opt/centinela/api-gateway && git reset --hard HEAD~1
+            cd /opt/centinela/gateway-service && git reset --hard HEAD~1
             docker compose up -d --build --remove-orphans
             exit 1
           fi
