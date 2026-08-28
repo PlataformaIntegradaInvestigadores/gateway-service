@@ -1,16 +1,10 @@
-name: CI — api-gateway
+name: "CD — api-gateway → Producción"
 
 on:
   push:
-    branches: [develop]
-  pull_request:
-    branches: [develop, main]
+    branches: [main]
 
 jobs:
-  branch-name:
-    if: github.event_name == 'pull_request'
-    uses: PlataformaIntegradaInvestigadores/.github/.github/workflows/branch-name.yml@main
-
   # ── Control de calidad ────────────────────────────────────────────────────
   quality:
     name: Control de calidad (nginx config)
@@ -23,25 +17,24 @@ jobs:
       - name: Validar docker-compose.yml
         run: docker compose config -q
 
-  # ── Deploy staging ───────────────────────────────────────────────────────────
-  deploy-staging:
-    name: Deploy a servidor staging
-    runs-on: [self-hosted, staging]
+  # ── Deploy producción ────────────────────────────────────────────────────
+  deploy-production:
+    name: Deploy a servidor producción
+    runs-on: [self-hosted, production]
     needs: quality
-    if: github.ref == 'refs/heads/develop'
     steps:
-      - name: Actualizar codigo
+      - name: Actualizar código
         run: |
           cd /opt/centinela/api-gateway
-          git fetch origin develop
-          git reset --hard origin/develop
+          git fetch origin main
+          git reset --hard origin/main
 
       - name: Reconstruir contenedor
         run: |
           cd /opt/centinela/api-gateway
           docker compose up -d --build
 
-      - name: Health check
+      - name: Health check con rollback automático
         run: |
           sleep 5
           HEALTHY=false
@@ -54,8 +47,9 @@ jobs:
             sleep 6
           done
           if [ "$HEALTHY" = "false" ]; then
-            echo "Health check fallido — rollback"
+            echo "Health check fallido — rollback al commit anterior"
             cd /opt/centinela/api-gateway && git reset --hard HEAD~1
             docker compose up -d --build
             exit 1
           fi
+          echo "Deploy exitoso — api-gateway en producción"
