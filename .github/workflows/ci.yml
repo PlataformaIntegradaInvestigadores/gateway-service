@@ -19,7 +19,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Validar sintaxis de nginx.conf
         run: |
-          docker run --rm -v "$PWD/nginx.conf:/etc/nginx/nginx.conf:ro" nginx:1.27-alpine nginx -t
+          docker build -t api-gateway-quality-check .
+          docker run --rm api-gateway-quality-check nginx -t
       - name: Validar docker-compose.yml
         run: docker compose config -q
 
