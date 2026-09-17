@@ -58,7 +58,7 @@ async function healthAll(r) {
     }
 
     const payload = {
-        server_name: "centinela",
+        server_name: "Centinela",
         ip_address: r.variables.server_addr,
         global_status: global_status,
         groups: groups,
