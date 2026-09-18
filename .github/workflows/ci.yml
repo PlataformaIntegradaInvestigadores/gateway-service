@@ -1,0 +1,75 @@
+name: CI — api-gateway
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  branch-name:
+    if: github.event_name == 'pull_request'
+    uses: PlataformaIntegradaInvestigadores/.github/.github/workflows/branch-name.yml@main
+
+  # ── Control de calidad ────────────────────────────────────────────────────
+  quality:
+    name: Control de calidad (nginx config)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validar sintaxis de nginx.conf
+        run: |
+          docker build -t api-gateway-quality-check .
+          docker run --rm api-gateway-quality-check nginx -t
+      - name: Validar docker-compose.yml
+        run: docker compose config -q
+
+  # ── Docker build ───────────────────────────────────────────────────────────
+  build-docker:
+    name: Build imagen Docker
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build imagen
+        run: docker build -t api-gateway:${{ github.sha }} .
+      - name: Verificar imagen
+        run: docker images api-gateway
+
+  # ── Deploy staging ───────────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy a servidor staging
+    runs-on: [self-hosted, staging]
+    needs: quality
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Actualizar codigo
+        run: |
+          cd /opt/centinela/gateway-service
+          git fetch origin develop
+          git reset --hard origin/develop
+
+      - name: Reconstruir contenedor
+        run: |
+          cd /opt/centinela/gateway-service
+          docker compose up -d --build --remove-orphans
+
+      - name: Health check
+        run: |
+          sleep 5
+          HEALTHY=false
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:8080/health || echo "000")
+            echo "Intento $i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              HEALTHY=true; break
+            fi
+            sleep 6
+          done
+          if [ "$HEALTHY" = "false" ]; then
+            echo "Health check fallido — rollback"
+            cd /opt/centinela/gateway-service && git reset --hard HEAD~1
+            docker compose up -d --build --remove-orphans
+            exit 1
+          fi

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Centinela — API Gateway</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --border: #334155;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2.5rem 1.5rem;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  p.subtitle { color: var(--muted); margin-top: 0; margin-bottom: 2rem; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+  li a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  li a:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .name { font-weight: 600; font-size: 1.05rem; }
+  .desc { color: var(--muted); font-size: 0.88rem; margin-top: 0.2rem; }
+  .arrow { color: var(--accent); font-size: 1.2rem; flex-shrink: 0; }
+  footer { margin-top: 2.5rem; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Centinela — API Gateway</h1>
+  <p class="subtitle">Documentación Swagger de cada microservicio</p>
+  <ul>
+    <li><a href="/api/docs/v1/identity" target="_blank" rel="noopener">
+      <div><div class="name">Identity</div><div class="desc">Usuarios, perfiles, grupos, JWT y MFA</div></div>
+      <span class="arrow">↗</span>
+    </a></li>
+    <li><a href="/api/docs/v1/social" target="_blank" rel="noopener">
+      <div><div class="name">Social</div><div class="desc">Feed social, consenso, comentarios y jobs de investigadores</div></div>
+      <span class="arrow">↗</span>
+    </a></li>
+    <li><a href="/api/docs/v1/search" target="_blank" rel="noopener">
+      <div><div class="name">Search</div><div class="desc">Motor de búsqueda sobre el grafo de autores/artículos/afiliaciones (Neo4j)</div></div>
+      <span class="arrow">↗</span>
+    </a></li>
+    <li><a href="/api/docs/v1/search-bff" target="_blank" rel="noopener">
+      <div><div class="name">Search BFF</div><div class="desc">Fachada v2 estable sobre la API v1 de Search</div></div>
+      <span class="arrow">↗</span>
+    </a></li>
+    <li><a href="/api/docs/v1/predictive" target="_blank" rel="noopener">
+      <div><div class="name">Predictive</div><div class="desc">Predicción de producción científica por afiliación (LightGBM)</div></div>
+      <span class="arrow">↗</span>
+    </a></li>
+    <li><a href="/api/docs/v1/rag" target="_blank" rel="noopener">
+      <div><div class="name">RAG</div><div class="desc">Búsqueda semántica asistida por LLM sobre el corpus de Scopus</div></div>
+      <span class="arrow">↗</span>
+    </a></li>
+  </ul>
+  <footer>Cada enlace abre en una pestaña nueva.</footer>
+</main>
+</body>
+</html>
