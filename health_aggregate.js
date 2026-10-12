@@ -6,6 +6,7 @@ const TARGETS = [
     { name: "predictive-service", url: "http://predictive-service:8003/health" },
     { name: "rag-service", url: "http://rag-service:8181/health" },
     { name: "governance-service", url: "http://governance-service:8005/health" },
+    { name: "analytics-service", url: "http://analytics-service:8006/health" },
     { name: "centinela-front", url: "http://centinela-front:80/health" },
 ];
 
