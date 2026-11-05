@@ -48,6 +48,20 @@ Esquema `/api/<servicio>/`:
 | `/ws/` | `social-service:8000` (WebSocket) |
 | `/media/` | `social-service:8000` / `identity-service:8002` |
 
+## Límites de tasa
+
+Por cliente (IP real, ver abajo); al excederse responde `429` con `Retry-After: 10` y cuerpo JSON `{"detail": "Too many requests. Try again later."}`.
+
+| Zona | Alcance | Límite |
+|---|---|---|
+| `auth` | `POST` a `token/`, `companies/token/`, `auth/mfa/verify/`, `register/`, `companies/register/` de identity | 30 por minuto, ráfaga de 15 |
+| `heavy` | `/api/rag/` (cada `/ask` ocupa la CPU del Ollama compartido 1–2 min) | 6 por minuto, ráfaga de 3 |
+| `api` | todas las rutas `/api/<servicio>/` | 20 por segundo, ráfaga de 100 |
+
+No se limitan los `health`, `/ws/` ni `/media/`, ni el `token/refresh/` (lo hace el front por su cuenta).
+
+**IP real del cliente.** Todo el tráfico entra por el nginx del host, que manda la IP en `X-Real-IP`. El gateway la toma de ahí (`real_ip_header`) solo si la conexión viene de una red de Docker (`172.16.0.0/12`); sin eso todos los usuarios compartirían una sola IP (la del bridge) y un único cliente agotaría el límite de todos. Detrás de una red institucional con NAT, varios usuarios comparten IP y comparten también el límite.
+
 ## Documentación (Swagger)
 
 `http://<host>/api/docs/v1/` — hub público (sin auth) con el Swagger UI de los 6 backends con API REST/HTTP:
@@ -69,12 +83,15 @@ Este repo no usa `.env` — la configuración de rutas vive directo en `nginx.co
 
 ## Tests
 
-No hay tests de aplicación (repo config-only). CI valida sintaxis de `nginx.conf` y `docker-compose.yml`:
+No hay tests de aplicación (repo config-only). CI valida sintaxis de `nginx.conf` y `docker-compose.yml`, y corre una prueba funcional del gateway:
 
 ```bash
 docker run --rm -v "$PWD/nginx.conf:/etc/nginx/nginx.conf:ro" nginx:1.27-alpine nginx -t
 docker compose config -q
+bash tests/smoke.sh
 ```
+
+`tests/smoke.sh` levanta el gateway delante de un contenedor que simula todos los servicios (`tests/stub-upstream.conf`) y comprueba los límites de tasa, la IP real, el `429` y los nombres únicos del health agregado. Necesita Docker.
 
 ## CI/CD
 

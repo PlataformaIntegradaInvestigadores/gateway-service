@@ -23,6 +23,8 @@ jobs:
           docker run --rm api-gateway-quality-check nginx -t
       - name: Validar docker-compose.yml
         run: docker compose config -q
+      - name: Probar límites de tasa, IP real y health agregado
+        run: bash tests/smoke.sh
 
   # ── Docker build ───────────────────────────────────────────────────────────
   build-docker:

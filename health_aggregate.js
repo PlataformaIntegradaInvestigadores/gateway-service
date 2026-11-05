@@ -29,6 +29,28 @@ async function fetchHealth(target) {
     }
 }
 
+// governance-service and analytics-service both report their group as
+// "Service runtime", so the aggregate showed two indistinguishable entries. When a
+// group name appears more than once, qualify every occurrence with the service
+// that reported it.
+function uniqueGroupNames(entries) {
+    const counts = {};
+    for (let i = 0; i < entries.length; i++) {
+        const name = entries[i].group.group_name;
+        counts[name] = (counts[name] || 0) + 1;
+    }
+
+    return entries.map(function (entry) {
+        const group = entry.group;
+        if (counts[group.group_name] < 2) {
+            return group;
+        }
+        return Object.assign({}, group, {
+            group_name: group.group_name + " (" + entry.server + ")",
+        });
+    });
+}
+
 async function healthAll(r) {
     const results = await Promise.all(TARGETS.map(fetchHealth));
 
@@ -43,13 +65,23 @@ async function healthAll(r) {
     let anyOffline = false;
     let anyDegraded = false;
 
+    const entries = [];
+
     for (let i = 0; i < results.length; i++) {
         const body = results[i];
         for (let j = 0; j < body.groups.length; j++) {
-            groups.push(body.groups[j]);
+            entries.push({
+                server: body.server_name || TARGETS[i].name,
+                group: body.groups[j],
+            });
         }
         if (body.global_status === "Offline") anyOffline = true;
         if (body.global_status === "Degraded") anyDegraded = true;
+    }
+
+    const unique = uniqueGroupNames(entries);
+    for (let i = 0; i < unique.length; i++) {
+        groups.push(unique[i]);
     }
 
     let global_status = "Online";
