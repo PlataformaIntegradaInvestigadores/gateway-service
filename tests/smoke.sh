@@ -76,6 +76,10 @@ limited_response=$(run "for i in \$(seq 1 25); do curl -s -o /dev/null -X POST -
 echo "$limited_response" | grep -q "429" && echo "$limited_response" | grep -qi "retry-after" && echo "$limited_response" | grep -q "Too many requests"; check "429 carries Retry-After and a JSON body" $?
 echo "$limited_response" | grep -qi "application/json"; check "429 is application/json" $?
 
+echo "-- rejections are logged with the zone"
+docker logs gw-smoke-gateway 2>&1 | grep -q 'limiting requests, excess: .* by zone "auth", client: 10.9.9.1'; check "error log names the zone and the real client" $?
+docker logs gw-smoke-gateway 2>&1 | grep -q 'by zone "heavy", client: 10.9.9.3'; check "error log also covers the RAG zone" $?
+
 echo "-- the real client address is used"
 docker logs gw-smoke-gateway 2>&1 | grep -q "^10.9.9.1 "; check "access log shows the X-Real-IP address, not the bridge" $?
 

@@ -60,6 +60,8 @@ Por cliente (IP real, ver abajo); al excederse responde `429` con `Retry-After: 
 
 No se limitan los `health`, `/ws/` ni `/media/`, ni el `token/refresh/` (lo hace el front por su cuenta).
 
+Cada rechazo queda en el error log (`docker logs gateway-service`) como `limiting requests, excess: ... by zone "auth", client: <ip>`.
+
 **IP real del cliente.** Todo el tráfico entra por el nginx del host, que manda la IP en `X-Real-IP`. El gateway la toma de ahí (`real_ip_header`) solo si la conexión viene de una red de Docker (`172.16.0.0/12`); sin eso todos los usuarios compartirían una sola IP (la del bridge) y un único cliente agotaría el límite de todos. Detrás de una red institucional con NAT, varios usuarios comparten IP y comparten también el límite.
 
 ## Documentación (Swagger)
