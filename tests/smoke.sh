@@ -31,6 +31,7 @@ docker create --name gw-smoke-stub --network "$NET" \
   --network-alias search-service --network-alias search-bff-service \
   --network-alias predictive-service --network-alias rag-service \
   --network-alias governance-service --network-alias analytics-service \
+  --network-alias ethical-recommender-service \
   --network-alias centinela-front nginx:1.27-alpine >/dev/null
 docker cp tests/stub-upstream.conf gw-smoke-stub:/etc/nginx/conf.d/default.conf
 docker start gw-smoke-stub >/dev/null
