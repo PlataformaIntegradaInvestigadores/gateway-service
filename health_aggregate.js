@@ -14,7 +14,25 @@ const TARGETS = [
 async function fetchHealth(target) {
     try {
         const reply = await ngx.fetch(target.url, { headers: { Accept: "application/json" } });
-        return await reply.json();
+        const body = await reply.json();
+        // Services that do not use the platform health format (no `groups`), e.g.
+        // ethical-recommender-service ({status: "ok", ...}), are mapped to it so one
+        // odd payload cannot break the whole aggregate.
+        if (!body || !Array.isArray(body.groups)) {
+            const up = reply.ok && (!body || body.status === undefined || body.status === "ok");
+            return {
+                server_name: target.name,
+                global_status: up ? "Online" : "Degraded",
+                groups: [
+                    {
+                        group_name: target.name,
+                        group_status: up ? "Operativo" : "Degradado",
+                        services: [{ name: target.name, status: up ? "ok" : "error" }],
+                    },
+                ],
+            };
+        }
+        return body;
     } catch (e) {
         return {
             server_name: target.name,

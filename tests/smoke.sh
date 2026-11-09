@@ -94,6 +94,7 @@ print("     groups:", names)
 ok = not dupes
 print("  ok   " if ok else "  FAIL ", "group names are unique" + ("" if ok else f" (repeated: {dupes})"))
 q = "Service runtime (governance-service)" in names and "Service runtime (analytics-service)" in names
+q = q and "ethical-recommender-service" in names
 print("  ok   " if q else "  FAIL ", "repeated names are qualified with the service")
 sys.exit(0 if ok and q else 1)
 '
