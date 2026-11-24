@@ -17,8 +17,8 @@ docker-compose.yml              # despliegue en desarrollo/staging
 docker-compose_produccion.yaml  # despliegue en producción
 nginx.conf                      # configuración de rutas, upstreams y hub de docs
 docs/
-  index.html                    # índice del hub (lista los 6 servicios)
-  swagger.html                  # shell de Swagger UI reutilizado por los 6 servicios
+  index.html                    # índice del hub (lista los 10 servicios)
+  swagger.html                  # shell de Swagger UI reutilizado por todos los servicios
 ```
 
 ## Requisitos previos
@@ -66,7 +66,7 @@ Cada rechazo queda en el error log (`docker logs gateway-service`) como `limitin
 
 ## Documentación (Swagger)
 
-`http://<host>/api/docs/v1/` — hub público (sin auth) con el Swagger UI de los 6 backends con API REST/HTTP:
+`http://<host>/api/docs/v1/` — hub público (sin auth) con el Swagger UI de los 10 backends con API REST/HTTP:
 
 | Ruta | Servicio |
 |---|---|
@@ -76,6 +76,10 @@ Cada rechazo queda en el error log (`docker logs gateway-service`) como `limitin
 | `/api/docs/v1/search-bff` | search-bff-service |
 | `/api/docs/v1/predictive` | predictive-service |
 | `/api/docs/v1/rag` | rag-service |
+| `/api/docs/v1/governance` | governance-service |
+| `/api/docs/v1/analytics` | analytics-service |
+| `/api/docs/v1/recommender` | ethical-recommender-service |
+| `/api/docs/v1/hatespeech` | hatespeech-service (solo documentación: su API es interna y no tiene ruta en el gateway) |
 
 Cada página es el mismo `docs/swagger.html`, que pide el spec a `<ruta>/openapi.json` (proxeado directo al upstream real, sin pasar por el rewrite de `/api/<servicio>/`). Cada backend declara su `servers` público para que "Try it out" pegue a la ruta del gateway, no a su ruta interna — ver README de cada servicio.
 
