@@ -102,5 +102,13 @@ run "curl -s $G/api/health" | python3 -c "$HEALTH_CHECK" || fail=1
 
 run "ok=0; for i in \$(seq 1 60); do c=\$(curl -s -o /dev/null -w '%{http_code}' -H 'X-Real-IP: 10.9.9.6' $G/api/health); [ \$c = 200 ] && ok=\$((ok+1)); done; echo \$ok" | grep -q "^60$"; check "health endpoints are never rate limited" $?
 
+echo "-- docs hub"
+# Every service linked from the index must have its Swagger page.
+pages=$(grep -o 'href="/api/docs/v1/[a-z-]*"' docs/index.html | sed 's#.*/v1/##; s#"##')
+for p in $pages; do
+  code=$(run "curl -s -o /dev/null -w '%{http_code}' $G/api/docs/v1/$p")
+  [ "$code" = 200 ]; check "docs page /api/docs/v1/$p is served" $?
+done
+
 [ "$fail" = 0 ] && echo "ALL OK" || echo "FAILURES"
 exit $fail
