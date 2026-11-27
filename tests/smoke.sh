@@ -102,6 +102,45 @@ run "curl -s $G/api/health" | python3 -c "$HEALTH_CHECK" || fail=1
 
 run "ok=0; for i in \$(seq 1 60); do c=\$(curl -s -o /dev/null -w '%{http_code}' -H 'X-Real-IP: 10.9.9.6' $G/api/health); [ \$c = 200 ] && ok=\$((ok+1)); done; echo \$ok" | grep -q "^60$"; check "health endpoints are never rate limited" $?
 
+echo "-- Q&A goes through governance (S-Q20)"
+# upstream METHOD PATH: prints "<code> <port> <uri>" as seen by the stub ("-" if none).
+upstream() {
+  run "curl -s --path-as-is -o /dev/null -D - -X $1 -H 'X-Real-IP: 10.9.9.8' -H 'Content-Type: application/json' -d '{}' '$G$2'" \
+    | tr -d '\r' | awk 'NR==1{c=$2} tolower($1)=="x-stub-upstream:"{p=$2; u=$3} END{print c, (p?p:"-"), (u?u:"-")}'
+}
+expect() { # description METHOD PATH "<code> <port> <uri>"
+  got=$(upstream "$2" "$3")
+  [ "$got" = "$4" ]; check "$1 ($got)" $?
+}
+expect "public Q&A POST reaches the governed route" POST \
+  /api/search/v1/llm-search/generate-qa/ "200 8005 /api/v1/governed/qa/generate"
+expect "query string does not bypass governance" POST \
+  "/api/search/v1/llm-search/generate-qa/?format=json" "200 8005 /api/v1/governed/qa/generate?format=json"
+expect "percent-encoded path is governed" POST \
+  /api/search/v1/llm-search/generate%2Dqa/ "200 8005 /api/v1/governed/qa/generate"
+expect "repeated slashes are governed" POST \
+  /api/search/v1//llm-search//generate-qa/ "200 8005 /api/v1/governed/qa/generate"
+expect "dot segments are governed" POST \
+  /api/search/v1/llm-search/./generate-qa/ "200 8005 /api/v1/governed/qa/generate"
+for v in generate-qa generate-qa.json generate-qa.json/ generate-qa.api GENERATE-QA/ generate-qa/x; do
+  expect "variant $v never reaches the generator" POST /api/search/v1/llm-search/$v "404 - -"
+done
+expect "internal generator path is not published" POST \
+  /api-se/v1/llm-search/generate-qa/ "404 - -"
+expect "articles keep going to search-service" GET \
+  /api/search/v1/articles/ "200 8001 /api-se/v1/articles/"
+expect "semantic search keeps going to search-service" POST \
+  /api/search/v1/llm-search/semantic-search/ "200 8001 /api-se/v1/llm-search/semantic-search/"
+expect "search v2 keeps going to search-bff-service" GET \
+  /api/search/v2/articles/ "200 8002 /api-se/v2/articles/"
+expect "review polling is under the governance prefix" GET \
+  /api/governance/governed/qa/reviews/00000000-0000-0000-0000-000000000000 \
+  "200 8005 /api/v1/governed/qa/reviews/00000000-0000-0000-0000-000000000000"
+expect "search admin-token validator is not published" GET \
+  /internal/auth/validate-admin-token/ "404 - -"
+expect "identity token validator is not published" GET \
+  /internal/auth/validate-token/ "404 - -"
+
 echo "-- docs hub"
 # Every service linked from the index must have its Swagger page.
 pages=$(grep -o 'href="/api/docs/v1/[a-z-]*"' docs/index.html | sed 's#.*/v1/##; s#"##')

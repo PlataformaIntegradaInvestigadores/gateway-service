@@ -43,6 +43,8 @@ Esquema `/api/<servicio>/`:
 | `/api/social/` | `social-service:8000` |
 | `/api/search/` | `search-service:8001` |
 | `/api/search/v2/` | `search-bff-service:8002` |
+| `POST /api/search/v1/llm-search/generate-qa/` | `governance-service:8005` (`/api/v1/governed/qa/generate`); las demás grafías de esa ruta responden `404` |
+| `/api/governance/` | `governance-service:8005` |
 | `/api/predictive/` | `predictive-service:8003` |
 | `/api/rag/` | `rag-service:8181` |
 | `/ws/` | `social-service:8000` (WebSocket) |
@@ -97,7 +99,7 @@ docker compose config -q
 bash tests/smoke.sh
 ```
 
-`tests/smoke.sh` levanta el gateway delante de un contenedor que simula todos los servicios (`tests/stub-upstream.conf`) y comprueba los límites de tasa, la IP real, el `429` y los nombres únicos del health agregado. Necesita Docker.
+`tests/smoke.sh` levanta el gateway delante de un contenedor que simula todos los servicios (`tests/stub-upstream.conf`) y comprueba los límites de tasa, la IP real, el `429`, los nombres únicos del health agregado y que la generación de Q&A solo llegue por la gobernanza. Necesita Docker.
 
 ## CI/CD
 
